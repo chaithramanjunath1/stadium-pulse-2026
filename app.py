@@ -58,7 +58,7 @@ Attendance: 82,500 (Full Capacity) | Time: 15 mins before kick-off.
 # -------------------------------------------------------------------
 # 4. SIDEBAR CONTROLS & ACCESSIBILITY READOUTS
 # -------------------------------------------------------------------
-st.sidebar.markdown("# ⚽ StadiumPulse 2026", aria_label="Application Title")
+st.sidebar.markdown("# ⚽ StadiumPulse 2026")
 st.sidebar.markdown("---")
 
 user_role = st.sidebar.radio(
@@ -108,7 +108,7 @@ def get_system_instruction(role, language):
 # -------------------------------------------------------------------
 # 6. USER INTERFACE & CHAT PIPELINE
 # -------------------------------------------------------------------
-st.markdown(f"# 🏟️ StadiumPulse 2026 — {user_role} Portal", aria_label="Main Header")
+st.markdown(f"# 🏟️ StadiumPulse 2026 — {user_role} Portal")
 st.caption("GenAI Real-Time Multi-Agent Orchestration Engine for Tournament Operations & Accessibility")
 
 if "messages" not in st.session_state:
