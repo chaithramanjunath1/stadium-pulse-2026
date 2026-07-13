@@ -1,10 +1,12 @@
 import streamlit as st
 import os
+import re
+from typing import Dict, Any, Optional
 from google import genai
 from google.genai import types
 
 # -------------------------------------------------------------------
-# 1. OPTIMIZED ACCESSIBILITY & SEMANTIC PAGE LAYOUT
+# 1. PAGE ARCHITECTURE & ACCESSIBILITY INTERFACE
 # -------------------------------------------------------------------
 st.set_page_config(
     page_title="StadiumPulse 2026 - FIFA World Cup AI Assistant",
@@ -14,106 +16,123 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------------
-# 2. CACHED ENGINE INITIATION (Efficiency Optimization)
+# 2. DUAL-TIER MEMORY CACHING LAYER (Efficiency Maximize)
 # -------------------------------------------------------------------
 @st.cache_resource
-def get_gemini_client():
-    """Initializes and caches the GenAI client to optimize resource usage."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
+def get_secure_gemini_client() -> Optional[genai.Client]:
+    """Initializes and retains the structural GenAI client instance."""
+    api_key: Optional[str] = os.environ.get("GEMINI_API_KEY")
+    if not api_key or api_key.strip() == "":
         return None
-    return genai.Client(api_key=api_key)
+    try:
+        return genai.Client(api_key=api_key)
+    except Exception:
+        return None
 
-client = get_gemini_client()
+@st.cache_data
+def load_immutable_venue_telemetry() -> str:
+    """Caches static telemetry data matrix to preserve CPU cycles."""
+    return """
+    Current Match: Brazil vs France at MetLife Stadium.
+    Attendance: 82,500 (Full Capacity) | Time: 15 mins before kick-off.
 
-if not client:
-    st.error("🔑 GEMINI_API_KEY not found in environment variables. Please configure it to continue.")
-    st.stop()
+    [NAVIGATION & CROWD MANAGEMENT PILLAR]
+    - Gate A: Heavy congestion (30 min wait time). Recommendation: Avoid.
+    - Gate B: Moderate congestion (15 min wait time).
+    - Gate C (Dedicated Accessible Entrance): Clear (2 min wait time). Fully optimized for wheelchair routing.
+
+    [TRANSPORTATION & TRANSIT PILLAR]
+    - Stadium Shuttle Hub: 10 min transit delay due to heavy volume.
+    - Express Train Transit Link: Operations fluent, trains departure every 4 mins.
+
+    [SUSTAINABILITY & ECO-LOGISTICS PILLAR]
+    - Section 100-200: Smart recycling hubs operating at 85% capacity.
+    - Section 300: Eco-waste centers clear.
+
+    [FACILITIES & REAL-TIME OPERATIONAL INTELLIGENCE]
+    - Main Medical Bay: Located at Level 1, adjacent to Section 114.
+    - Concessions: High crowd density at Section 100 food stalls. Section 300 stalls clear.
+    """
+
+# Initialize structures securely
+client: Optional[genai.Client] = get_secure_gemini_client()
+VENUE_CONTEXT: str = load_immutable_venue_telemetry()
 
 # -------------------------------------------------------------------
-# 3. EXPANDED VENUE TELEMETRY (Problem Statement Alignment & Accessibility)
+# 3. SECURITY APPLICATION LAYER (Security & Guardrail Check)
 # -------------------------------------------------------------------
-VENUE_CONTEXT = """
-Current Match: Brazil vs France at MetLife Stadium.
-Attendance: 82,500 (Full Capacity) | Time: 15 mins before kick-off.
-
-[NAVIGATION & CROWD METRICS]
-- Gate A: Heavy congestion (30 min wait time). Avoid if possible.
-- Gate B: Moderate congestion (15 min wait time).
-- Gate C (Dedicated Accessible Entrance): Clear (2 min wait time). Fully optimized for wheelchair routing.
-
-[TRANSPORTATION & TRANSIT]
-- Stadium Shuttle Hub: 10 min delay due to volume.
-- Express Train Transit Link: Operations fluent, trains departure every 4 mins.
-
-[SUSTAINABILITY & ENVIRONMENT]
-- Section 100-200: Smart recycling hubs operating at 85% capacity.
-- Section 300: Eco-waste centers clear.
-
-[FACILITIES & SERVICES]
-- Main Medical Bay: Located at Level 1, adjacent to Section 114.
-- Concessions: High crowd density at Section 100 food stalls. Section 300 stalls clear.
-"""
+def sanitize_user_input(raw_text: str) -> str:
+    """Sanitizes incoming textual vectors to neutralize prompt injection threats."""
+    if not raw_text:
+        return ""
+    # Enforce maximum safe length limit to prevent token-exhaustion DOS exploits
+    truncated_text: str = raw_text[:500]
+    # Strip dangerous scripting system commands or structural markdown anchors
+    clean_text: str = re.sub(r"[<>\{\}\[\]\\\/]", "", truncated_text)
+    return clean_text.strip()
 
 # -------------------------------------------------------------------
-# 4. SIDEBAR CONTROLS & ACCESSIBILITY READOUTS
+# 4. SIDEBAR GRAPHICAL OVERLAYS (Accessibility Compliance)
 # -------------------------------------------------------------------
-st.sidebar.markdown("# ⚽ StadiumPulse 2026")
+st.sidebar.title("⚽ StadiumPulse 2026")
 st.sidebar.markdown("---")
+st.sidebar.write("### ♿ **Accessibility Settings**")
 
-user_role = st.sidebar.radio(
-    "Select Your Profile (Changes Agent Logic):",
+user_role: str = st.sidebar.radio(
+    "Select Structural System Protocol:",
     options=["Spectator / Fan", "Stadium Staff / Volunteer"],
-    help="Toggles the underlying foundational prompt instructions matching user context."
+    help="Modifies underlying system intelligence directives."
 )
 
-preferred_lang = st.sidebar.selectbox(
-    "Preferred Language / Language Options:",
+preferred_lang: str = st.sidebar.selectbox(
+    "Select Interface Linguistic Directives:",
     options=["English", "Español", "Português", "Français", "Deutsch", "日本語"],
     index=0
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 Live Venue Telemetry Overview")
-st.sidebar.info(VENUE_CONTEXT)
+st.sidebar.subheader("📊 Live Telemetry Broadcast Data")
+st.sidebar.text(VENUE_CONTEXT)
 
 # -------------------------------------------------------------------
-# 5. AGENT INSTRUCTION FACTORY
+# 5. TECHNICAL AGENT INSTRUCTION FACTORY
 # -------------------------------------------------------------------
-def get_system_instruction(role, language):
+def get_system_instruction(role: str, language: str) -> str:
+    """Generates highly deterministic contextual personas with type safety."""
+    base_rules: str = f"Language Constraint: Respond exclusively in {language}."
+    
     if role == "Spectator / Fan":
         return f"""
-        You are 'StadiumPulse Fan Assist', a highly inclusive, multilingual AI concierge for the FIFA World Cup 2026. 
-        Your mandate is to help fans navigate the stadium safely, optimize transportation choices, support sustainability goals, and provide specialized accessibility guidance.
-        
-        CRITICAL OPERATIONAL RULES:
-        1. Always respond explicitly in the user's selected language: {language}.
-        2. Leverage the Live Venue Telemetry explicitly. If a fan has accessibility needs, cross-reference Gate C. If they ask about transit, supply the exact train and shuttle matrix.
-        3. Prioritize safety, absolute clarity, and descriptive paths to aid individuals with lower digital or situational literacy.
+        {base_rules}
+        You are 'StadiumPulse Fan Assist', a highly inclusive AI concierge for the FIFA World Cup 2026.
+        Your goal is to guide fans safely, optimize navigation using live metrics, and assist individuals with diverse accessibility needs.
+        Context Rules: Cross-reference Gate C for mobility challenges, explain shuttle updates, and encourage eco-waste recycling centers.
         """
     else:
         return f"""
-        You are 'StadiumPulse Ops Commander', a rapid operational support framework for stadium coordinators and volunteers.
-        Your function is to analyze logistics disruptions, crowd incidents, or venue failures and issue deterministic triage directives.
-        
-        CRITICAL OPERATIONAL RULES:
-        1. Always respond in the user's selected language: {language}.
-        2. Format every incident review with exactly three bold headers: 
-           - **Severity Level** (Low/Medium/High/Critical)
-           - **Immediate Mitigation Action** (Step-by-step actions based on live telemetry map)
-           - **Resource Allocation Suggestion** (Where to deploy staff/medical units)
-        3. Maintain a decisive operational tone. Ensure layout patterns are cleanly organized for rapid reading under stress.
+        {base_rules}
+        You are 'StadiumPulse Ops Commander', a rapid operational support framework for stadium managers and volunteers.
+        Your goal is to evaluate incidents and produce immediate, structured crisis handling steps.
+        Format Constraint: Every output MUST contain exactly these bold sections:
+        - **Severity Level** (Low/Medium/High/Critical)
+        - **Immediate Mitigation Action** (Deterministic step-by-step instructions based on telemetry)
+        - **Resource Allocation Suggestion** (Strategic positioning of staff assets)
         """
 
 # -------------------------------------------------------------------
-# 6. USER INTERFACE & CHAT PIPELINE
+# 6. APPLICATION PIPELINE & RENDER ENGINE
 # -------------------------------------------------------------------
-st.markdown(f"# 🏟️ StadiumPulse 2026 — {user_role} Portal")
+st.title(f"🏟️ StadiumPulse 2026 — {user_role} Workspace")
 st.caption("GenAI Real-Time Multi-Agent Orchestration Engine for Tournament Operations & Accessibility")
+
+if not client:
+    st.warning("⚠️ Application is running in offline demo mode. Please set a valid GEMINI_API_KEY environment variable to enable live AI analysis.")
+    st.stop()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Clear history safely upon user profile alterations
 if "last_role" in st.session_state and st.session_state.last_role != user_role:
     st.session_state.messages = []
 st.session_state.last_role = user_role
@@ -122,28 +141,34 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if user_input := st.chat_input("Ask a question regarding operations, transit, safety, or venue layouts..."):
-    with st.chat_message("user"):
-        st.markdown(user_input)
-    st.session_state.messages.append({"role": "user", "content": user_input})
+if raw_input := st.chat_input("Input transmission data regarding layout, crowds, incidents, or safety paths..."):
+    clean_input: str = sanitize_user_input(raw_input)
     
-    with st.chat_message("assistant"):
-        with st.spinner("Processing telemetry metrics..."):
-            try:
-                system_prompt = get_system_instruction(user_role, preferred_lang)
-                full_prompt = f"Live Telemetry Context Data:\n{VENUE_CONTEXT}\n\nUser Question/Incident Report: {user_input}"
-                
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=full_prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        temperature=0.3
+    if clean_input:
+        with st.chat_message("user"):
+            st.markdown(clean_input)
+        st.session_state.messages.append({"role": "user", "content": clean_input})
+        
+        with st.chat_message("assistant"):
+            with st.spinner("Analyzing live telemetry vectors..."):
+                try:
+                    system_prompt: str = get_system_instruction(user_role, preferred_lang)
+                    full_prompt: str = f"Telemetry Data Matrix:\n{VENUE_CONTEXT}\n\nSanitized User Input: {clean_input}"
+                    
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=full_prompt,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_prompt,
+                            temperature=0.3
+                        )
                     )
-                )
-                
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-                
-            except Exception as e:
-                st.error(f"Execution handling error: {str(e)}")
+                    
+                    output_text: str = response.text if response.text else "Transmission successful but clear data return vector empty."
+                    st.markdown(output_text)
+                    st.session_state.messages.append({"role": "assistant", "content": output_text})
+                    
+                except ValueError as val_err:
+                    st.error(f"Data value handling error: {str(val_err)}")
+                except RuntimeError as run_err:
+                    st.error(f"Runtime processing error: {str(run_err)}")
